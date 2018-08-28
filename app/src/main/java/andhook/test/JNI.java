@@ -7,6 +7,7 @@ public final class JNI {
     private static native boolean java_hook();
 
     private static native boolean native_hook();
+    private static native boolean hook_dns();
 
     public static void test() {
         MainActivity.clear();
@@ -41,5 +42,9 @@ public final class JNI {
             MainActivity.info("jni hook test passed");
         else
             MainActivity.alert("jni hook test failed");
+    }
+
+    public static void text_dns(){
+        hook_dns();
     }
 }

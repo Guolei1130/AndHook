@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <netdb.h>
 #define AKLog(...) __android_log_print(ANDROID_LOG_VERBOSE, __FUNCTION__, __VA_ARGS__)
 #define AKHook(X)  AKHookFunction(reinterpret_cast<void *>(X), reinterpret_cast<void *>(my_##X), reinterpret_cast<void **>(&sys_##X))
 
@@ -96,6 +97,46 @@ extern int my_execv(const char *name, char *const *argv)
     return r;
 }
 
+static int(*sys_getaddrinfo)(const char* __node, const char* __service, const struct addrinfo* __hints, struct addrinfo** __result);
+static int my_getaddrinfo(const char* __node, const char* __service, const struct addrinfo* __hints, struct addrinfo** __result)
+{
+    native_passed = JNI_TRUE;
+
+    AKLog("calling original my_getaddrinfo %p...", sys_getaddrinfo);
+    int r = sys_getaddrinfo(__node,__service,__hints,__result);
+
+    return r;
+}
+
+static jboolean JNICALL hook_dns(JNIEnv *,jclass) {
+    static bool hooked = false;
+
+    AKLog("starting native hook...");
+    if (!hooked) {
+        AKHook(getaddrinfo);
+
+        // typical use case
+        const void *libc = AKGetImageByName("libc.so");
+        if (libc != NULL) {
+            AKLog("base address of libc.so is %p", AKGetBaseAddress(libc));
+
+            void *p = AKFindSymbol(libc, "getaddrinfo");
+            if (p != NULL) {
+                AKHookFunction(p,                                        // hooked function
+                               reinterpret_cast<void *>(my_getaddrinfo),   // our function
+                               reinterpret_cast<void **>(&sys_getaddrinfo) // backup function pointer
+                );
+                AKLog("hook getaddrinfo success");
+            }
+            AKCloseImage(libc);
+        } //if
+
+        hooked = true;
+    } //if
+
+    return native_passed;
+}
+
 static jboolean JNICALL native_hook(JNIEnv *, jclass)
 {
     static bool hooked = false;
@@ -151,9 +192,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *)
     env->ExceptionClear();
     JNINativeMethod methods[] = {
             { "java_hook", "()Z", reinterpret_cast<void *>(&java_hook) },
-            { "native_hook", "()Z", reinterpret_cast<void *>(&native_hook) }
+            { "native_hook", "()Z", reinterpret_cast<void *>(&native_hook) },
+            { "hook_dns","()Z" , reinterpret_cast<void *>(&hook_dns)}
     };
-    env->RegisterNatives(JNI, methods, 2);
+    env->RegisterNatives(JNI, methods, 3);
 
     return JNI_VERSION_1_6;
 }

@@ -28,6 +28,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
+import android.webkit.WebView;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -158,6 +159,14 @@ public class MainActivity extends Activity {
                 InnerException.test();
             }
         });
+        findViewById(R.id.hook_android_getaddrinfofornet).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                JNI.text_dns();
+                WebView webView = new WebView(MainActivity.this);
+                webView.loadUrl("www.baidu.com");
+            }
+        });
     }
 
     public static void runAction(final Runnable action) {
@@ -206,4 +215,6 @@ public class MainActivity extends Activity {
             tv_status.scrollTo(0, 0);
         }
     }
+
+    public native boolean hook_dns();
 }
