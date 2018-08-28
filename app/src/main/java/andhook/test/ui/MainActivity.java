@@ -29,6 +29,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -163,8 +164,9 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 JNI.text_dns();
-                WebView webView = new WebView(MainActivity.this);
-                webView.loadUrl("www.baidu.com");
+                WebView webView = findViewById(R.id.webview);
+                webView.loadUrl("http://www.baidu.com");
+                webView.setWebViewClient(new WebViewClient());
             }
         });
     }
