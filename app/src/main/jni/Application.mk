@@ -1,5 +1,5 @@
 APP_ABI          := armeabi-v7a arm64-v8a x86 x86_64
-APP_OPTIM        := release
+APP_OPTIM        := debug
 APP_PLATFORM     := android-27
 APP_STL          := system
 APP_CPPFLAGS     := -std=c++1y
